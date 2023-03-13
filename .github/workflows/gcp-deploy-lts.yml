@@ -6,7 +6,8 @@ on:
       - 'main'
 
 env:
-  PROJECT_ID: ${{ secrets.GCE_PROJECT }}
+  PROJECT_ID: test-gcr-deploy
+  IMAGE_NAME: test-hello-image-name
   # GCE_INSTANCE: my-githubactions-vm  # TODO: update to instance name
   # GCE_INSTANCE_ZONE: us-central1-a   # TODO: update to instance zone
 
@@ -37,6 +38,8 @@ jobs:
         uses: 'google-github-actions/auth@v1'
         with:
           credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
+          project_id: '${{ env.PROJECT_ID }}'
+          export_default_credentials: true
 
       # Setup gcloud CLI
       - name: Set up Cloud SDK
@@ -50,11 +53,12 @@ jobs:
       # Build the Docker image
       - name: Build
         run: |-
-          docker build -t "gcr.io_nest-hello-image" .
+          docker build -t $IMAGE_NAME:latest .
       # Push the Docker image to Google Container Registry
       - name: Publish
         run: |-
-          docker push "gcr.io_nest-hello-image"
+          docker tag $IMAGE_NAME:latest gcr.io/$PROJECT_ID/$IMAGE_NAME:latest
+          docker push $IMAGE_NAME:latest gcr.io/$PROJECT_ID/$IMAGE_NAME:latest
       # - name: Deploy
       #   run: |-
       #     gcloud compute instances update-container "$GCE_INSTANCE" \
